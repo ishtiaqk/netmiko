@@ -1,0 +1,45 @@
+from __future__ import print_function
+from netmiko import ConnectHandler
+from itertools import zip_longest
+from paramiko.ssh_exception import SSHException
+from netmiko.ssh_exception import NetMikoTimeoutException
+from datetime import datetime
+import sys
+import time
+import select
+import paramiko
+import io
+import os
+import socket, subprocess, re
+import netmiko
+
+# Output file
+fd = io.open(r'/Users/ishtiaqkhan/ssh-dev/SSH-Output.txt', 'w')
+old_stdout = sys.stdout
+sys.stdout = fd
+platform = 'cisco_ios'
+username = 'ID'
+password = ''
+# Hosts ip address/fqdn to be put in this file
+ip_add_file = io.open('/Users/ishtiaqkhan/ssh-dev/IPAddressList.txt', 'r')
+
+# do task via for loop over Host file
+
+for host in ip_add_file:
+    host = host.strip()
+    try:
+        starting_time = datetime.now()
+        print(">>>> {}".format(starting_time))
+        device = ConnectHandler(device_type=platform, ip=host, username=username, password=password)
+        output = device.send_command('terminal length 0')
+        output = device.send_command('enable')
+        print('##############################################################\n')
+        print(".........DEVICE %s.....\n" % (host))
+        print('...................VLANs STATUS......................\n')
+        output = device.send_command('sh vlan \n')
+        time.sleep(.5)
+        print(output)
+    except (EOFError, SSHException, NetMikoTimeoutException):
+        print("SSH is not enabled for %s\n" %(host))
+    continue
+fd.close()
